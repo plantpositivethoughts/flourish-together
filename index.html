@@ -109,6 +109,21 @@
   .days{display:flex;gap:6px;font-size:11px;color:var(--muted)} .days span{flex:1;text-align:center}
   .toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
   .toast.show{opacity:1}
+  /* Quote of the day */
+  .quote{cursor:pointer}
+  .qdate{text-align:center;font:500 12px/1.2 var(--caps);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:22px 0 0}
+  .qcard{position:relative;text-align:center;padding:44px 26px 34px;margin-top:14px;background:linear-gradient(160deg,var(--card),var(--soft));overflow:hidden}
+  .qcard::before{content:"“";position:absolute;top:-18px;left:14px;font:600 130px/1 var(--serif);color:var(--sage);opacity:.45}
+  .qcard .leafmark{font-size:22px;opacity:.8}
+  .qtext{font:italic 500 30px/1.3 var(--serif);color:var(--green);margin:14px 0 18px;position:relative}
+  .qsig{font:500 11px/1.2 var(--caps);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .qactions{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+  .qactions .on{background:var(--green);color:#fff}
+  @media (prefers-color-scheme:dark){.qactions .on{color:#18200f}}
+  .reflect b{font:600 19px/1.2 var(--serif);color:var(--green);display:block;margin-bottom:4px}
+  .fav{display:flex;gap:10px;align-items:flex-start}
+  .fav p{margin:0;flex:1;font:italic 500 19px/1.35 var(--serif)}
+  .fav button{background:none;padding:2px 6px;color:var(--muted);font-size:18px}
   /* Season tip + breathing */
   .season{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,var(--soft),var(--card))}
   .season .ic{font-size:26px;line-height:1}
@@ -183,6 +198,26 @@
     </div>
   </section>
 
+  <!-- QUOTE OF THE DAY -->
+  <section id="quoteday">
+    <div class="qdate" id="qDate"></div>
+    <div class="card qcard">
+      <div class="leafmark">🌿</div>
+      <p class="qtext" id="qText"></p>
+      <div class="qsig">Floreamus Una · Quote of the day</div>
+    </div>
+    <div class="qactions">
+      <button class="btn ghost small" id="qFav">♡ Save</button>
+      <button class="btn ghost small" id="qShare">Share</button>
+      <button class="btn ghost small" id="qBreathe">Breathe with it</button>
+    </div>
+    <h2>Today's reflection</h2>
+    <div class="card reflect"><b id="qPrompt"></b><span class="sub">Write your thoughts in today's check-in note, or simply sit with it.</span></div>
+    <p class="sub" style="text-align:center;margin:14px 0 0" id="qNext"></p>
+    <h2>Saved quotes</h2>
+    <div id="favList"></div>
+  </section>
+
   <!-- PLANTS -->
   <section id="plants">
     <h2>My plants</h2>
@@ -245,6 +280,7 @@
 <nav>
   <button data-tab="today" class="active"><span>☀️</span>Today</button>
   <button data-tab="plants"><span>🪴</span>Plants</button>
+  <button data-tab="quoteday"><span>🍃</span>Quote</button>
   <button data-tab="wellbeing"><span>💚</span>Growth</button>
   <button data-tab="settings"><span>⚙️</span>Settings</button>
 </nav>
@@ -327,15 +363,122 @@
     'Orchid':{e:'🌺',d:7},'Fiddle-leaf fig':{e:'🌳',d:7},'ZZ plant':{e:'🍀',d:14},'Other':{e:'🌱',d:7}
   };
   const MOODS = ['😞','😕','😐','🙂','😄'];
+  // Original Floreamus Una mindfulness quotes: one per day, cycling through the list
   const QUOTES = [
-    'Water yourself as you water your plants.',
-    'Growth is slow, then sudden. Keep tending.',
-    'A few minutes with something green is a few minutes well spent.',
-    'Rest is part of the growing season.',
-    'Small, steady care beats grand gestures.',
-    'Notice one new leaf today — on a plant, or in yourself.',
-    'Roots first. Blooms later.'
-  ];
+    "Water yourself as you water your plants.",
+    "Growth is slow, then sudden. Keep tending.",
+    "Rest is part of the growing season.",
+    "Roots first. Blooms later.",
+    "Small, steady care beats grand gestures.",
+    "Notice one new leaf today, on a plant or in yourself.",
+    "You do not have to bloom all year round.",
+    "A seed does not hurry, and still it becomes a forest.",
+    "Breathe in the green. Breathe out the grey.",
+    "Be as patient with yourself as you are with a seedling.",
+    "Every leaf turns towards the light. So can you.",
+    "Stillness is not empty. It is where roots grow.",
+    "Today, let something be enough.",
+    "Even the oak was once a quiet acorn.",
+    "Tend the small things, and the big things will follow.",
+    "Soft soil lets roots go deep. Be gentle with yourself.",
+    "There is no wrong pace for growing.",
+    "Pause. Look closely. Something is changing.",
+    "Pruning is not loss. It makes room for new growth.",
+    "The garden does not compare its flowers.",
+    "Let this breath be the only thing you do.",
+    "Winter is not the end. It is the gathering.",
+    "Kindness is a kind of sunlight.",
+    "You can begin again with every watering.",
+    "What you nourish, grows.",
+    "A wilted leaf is not a failed plant.",
+    "Slow is still moving.",
+    "Make a little room today for nothing at all.",
+    "Your roots are stronger than your storms.",
+    "Notice the light before you notice the shadows.",
+    "Grow where you are, as you are.",
+    "Quiet days grow deep roots.",
+    "Every bloom began in the dark.",
+    "Let go of the leaves that no longer serve you.",
+    "Gentleness is a strength that bends and does not break.",
+    "A single green thing can change a whole room.",
+    "You are allowed to be a work in progress.",
+    "Return to the breath, as a plant returns to the sun.",
+    "Care is a quiet way of saying: you matter.",
+    "Not every season is for flowering.",
+    "The smallest sprout still reaches for the sky.",
+    "Be the soil, not the storm.",
+    "Look up. The sky is part of your garden too.",
+    "Bloom softly. It still counts.",
+    "Take today one breath, one step, one leaf at a time.",
+    "Where attention goes, life grows.",
+    "Even rain is a kind of care.",
+    "There is calm in doing one thing slowly.",
+    "The heart, like a garden, needs tending.",
+    "Let your thoughts drift like leaves on water.",
+    "Repotting is uncomfortable. Growth often is.",
+    "Celebrate the new leaf, however small.",
+    "You do not need to see the roots to trust they are growing.",
+    "The garden never hurries, and still the roses come.",
+    "Be here, the way a tree is here.",
+    "A gentle word waters the spirit.",
+    "Make space, and life will fill it with green.",
+    "Today's tending is tomorrow's flourishing.",
+    "Sit with what is, as the earth sits with the seed.",
+    "You are part of the living world, not apart from it.",
+    "Rest your eyes on something green, and let your shoulders drop.",
+    "Let the morning be soft.",
+    "A little light, a little water, a little time.",
+    "Grow at the speed of your own heart.",
+    "The quietest moments plant the deepest peace.",
+    "What blooms in you today?",
+    "Some days are for growing. Some are for resting. Both are good.",
+    "Hold your worries lightly, like a seed in an open hand.",
+    "Each new day is fresh soil.",
+    "Peace grows in the spaces we leave empty.",
+    "Let the day unfold, petal by petal.",
+    "Be curious about your own growing.",
+    "There is beauty in the half-opened bud.",
+    "Breathe like the forest: slow, deep, unhurried.",
+    "The world is softer when we move slowly through it.",
+    "Care for one living thing today, and you have done good.",
+    "Wherever you are planted, you can still turn towards the light.",
+    "Even a cracked pot can hold a thriving plant.",
+    "Let your breath be the rain that settles the dust.",
+    "Healing, like growing, happens out of sight.",
+    "You are allowed to take up space, like a tree in a meadow.",
+    "The leaves let go without fear. Spring always returns.",
+    "Simple care, done daily, is a quiet kind of love.",
+    "Notice what is already flourishing.",
+    "Every garden has weeds. Every garden is still beautiful.",
+    "You don't have to grow alone. Let us flourish together.",
+    "Lean towards what brings you light.",
+    "Ground yourself. Feel your feet like roots in the earth.",
+    "Stillness waters the soul.",
+    "Begin again, as gently as the dawn."
+    ];
+  const PROMPTS = [
+    "What is one small thing you can tend to today?",
+    "Where in your body do you feel calm right now?",
+    "What are you ready to let go of?",
+    "Name three things around you that are quietly growing.",
+    "What would being gentle with yourself look like today?",
+    "What helped you feel steady this week?",
+    "Which season does your heart feel like today, and why?",
+    "What is one thing you're grateful for that you usually overlook?",
+    "Where could you slow down, just a little?",
+    "What new leaf has appeared in your life lately?",
+    "Who helps you flourish? How could you thank them?",
+    "What does rest mean to you today?",
+    "Take three slow breaths. What do you notice?",
+    "What would you like to grow more of in your life?",
+    "What light are you turning towards right now?",
+    "Spend a minute with a plant. What do you see that you hadn't before?",
+    "What does 'enough' feel like today?",
+    "What is one kind thing you can say to yourself?",
+    "What roots, people, places or habits, keep you grounded?",
+    "How can you make a little space for quiet today?",
+    "What small win deserves celebrating?"
+    ];
   const DAY = 86400000;
   const todayStr = () => new Date().toISOString().slice(0,10);
   const daysBetween = (a,b) => Math.round((new Date(b) - new Date(a)) / DAY);
@@ -583,9 +726,43 @@
     const h = new Date().getHours();
     const part = h<12?'Good morning':h<18?'Good afternoon':'Good evening';
     $('greeting').textContent = state.name ? `${part}, ${state.name}` : part;
-    $('quote').textContent = QUOTES[Math.floor(Date.now()/DAY) % QUOTES.length];
+    renderQuote();
     renderSeason(); renderPlants(); renderCheckin(); renderGrowth(); renderSettings(); renderBreathCount();
   }
+  // ---------- Quote of the day ----------
+  const dayIndex = () => { const d = new Date(); return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / DAY); };
+  const todaysQuote = () => QUOTES[dayIndex() % QUOTES.length];
+  const todaysPrompt = () => PROMPTS[dayIndex() % PROMPTS.length];
+  function renderQuote(){
+    const q = todaysQuote(), favs = state.favQuotes || [];
+    $('quote').textContent = q;
+    $('qDate').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long' });
+    $('qText').textContent = q;
+    $('qPrompt').textContent = todaysPrompt();
+    const saved = favs.includes(q);
+    $('qFav').textContent = saved ? '♥ Saved' : '♡ Save'; $('qFav').classList.toggle('on', saved);
+    $('qNext').textContent = 'A new quote blooms here every morning.';
+    $('favList').innerHTML = favs.length ? favs.slice().reverse().map(f => `<div class="card fav"><p>${esc(f)}</p><button data-unfav="${esc(f)}" aria-label="Remove from saved">✕</button></div>`).join('')
+      : `<div class="empty">Tap ♡ Save to keep quotes that speak to you.</div>`;
+  }
+  $('qFav').onclick = () => {
+    const q = todaysQuote(), favs = state.favQuotes || [];
+    state.favQuotes = favs.includes(q) ? favs.filter(f => f !== q) : [...favs, q];
+    save(); renderQuote(); toast(state.favQuotes.includes(q) ? 'Saved to your quotes 💚' : 'Removed');
+  };
+  $('favList').addEventListener('click', e => {
+    const b = e.target.closest('[data-unfav]'); if (!b) return;
+    state.favQuotes = (state.favQuotes || []).filter(f => f !== b.dataset.unfav); save(); renderQuote();
+  });
+  $('qShare').onclick = async () => {
+    const text = `“${todaysQuote()}” — Floreamus Una 🌿`;
+    try {
+      if (navigator.share) await navigator.share({ title:'Quote of the day', text, url: location.href.split('#')[0] });
+      else { await navigator.clipboard.writeText(text); toast('Quote copied'); }
+    } catch(e){}
+  };
+  $('quote').onclick = () => document.querySelector('nav button[data-tab=quoteday]').click();
+
   // ---------- One-minute breath: 6 cycles of 4s in, 6s out ----------
   let bTimers = [];
   const clearB = () => { bTimers.forEach(clearTimeout); bTimers = []; };
@@ -609,6 +786,7 @@
     });
   }
   $('breatheBtn').onclick = startBreath;
+  $('qBreathe').onclick = () => { startBreath(); $('bText').textContent = todaysQuote(); };
   $('bClose').onclick = () => { clearB(); $('breathe').classList.remove('show'); };
 
   // ---------- Welcome (first run) ----------
