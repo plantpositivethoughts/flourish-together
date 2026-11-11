@@ -124,6 +124,21 @@
   .fav{display:flex;gap:10px;align-items:flex-start}
   .fav p{margin:0;flex:1;font:italic 500 19px/1.35 var(--serif)}
   .fav button{background:none;padding:2px 6px;color:var(--muted);font-size:18px}
+  /* About + book corner */
+  .about p{margin:6px 0}
+  .about .latin{font:italic 500 22px/1.3 var(--serif);color:var(--green);margin:4px 0 8px}
+  .book{display:flex;gap:16px;align-items:flex-start}
+  .cover{width:96px;height:144px;flex:none;border-radius:4px 10px 10px 4px;background:linear-gradient(160deg,#dfe9cf,#9fbd73 60%,#6f9440);box-shadow:inset 6px 0 8px -4px rgba(0,0,0,.25),0 8px 18px rgba(61,95,18,.25);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;color:#fff}
+  .cover b{font:600 17px/1.1 var(--serif);text-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .cover small{font:500 8px/1.2 var(--caps);letter-spacing:.12em;margin-top:8px;opacity:.9}
+  .cover img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+  .book .btns{display:flex;flex-direction:column;gap:8px;margin-top:10px;align-items:flex-start}
+  a.btn{display:inline-block;text-decoration:none;border-radius:999px;padding:8px 16px;font-size:14px}
+  .socials{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .bookmini{display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit}
+  .bookmini .cover{width:44px;height:66px;padding:4px}
+  .bookmini .cover b{font-size:9px}
+  .bookmini .cover small{display:none}
   /* Season tip + breathing */
   .season{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,var(--soft),var(--card))}
   .season .ic{font-size:26px;line-height:1}
@@ -222,6 +237,11 @@
     <h2>Today's reflection</h2>
     <div class="card reflect"><b id="qPrompt"></b><span class="sub">Write your thoughts in today's check-in note, or simply sit with it.</span></div>
     <p class="sub" style="text-align:center;margin:14px 0 0" id="qNext"></p>
+    <h2>From Floreamus Una</h2>
+    <a class="card bookmini" href="https://amzn.eu/d/0d2ZzZ5r" target="_blank" rel="noopener">
+      <div class="cover"><b>Life in Full Bloom</b><small>Floreamus Una</small></div>
+      <div class="grow"><div class="name">Life in Full Bloom</div><div class="sub">Enjoyed today's quote? There's more in the book, on Kindle →</div></div>
+    </a>
     <h2>Saved quotes</h2>
     <div id="favList"></div>
   </section>
@@ -250,6 +270,27 @@
 
   <!-- SETTINGS -->
   <section id="settings">
+    <h2>About Floreamus Una</h2>
+    <div class="card about">
+      <p class="latin">Floreamus una — “let us flourish together.”</p>
+      <p>A wellbeing space that brings plants and people together: caring for something green, and caring for yourself while you do it.</p>
+      <div class="socials">
+        <a class="btn ghost small" href="https://www.instagram.com/plantpositivethoughts/" target="_blank" rel="noopener">Instagram</a>
+        <a class="btn ghost small" href="https://www.tiktok.com/@floreamus.una" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <h2>The book</h2>
+    <div class="card book" id="book">
+      <div class="cover"><b>Life in Full Bloom</b><small>Floreamus Una</small></div>
+      <div class="grow">
+        <div class="name">Life in Full Bloom</div>
+        <div class="sub">A Floreamus Una book, available on Kindle.</div>
+        <div class="btns">
+          <a class="btn small" href="https://amzn.eu/d/0d2ZzZ5r" target="_blank" rel="noopener">Get it on Amazon</a>
+          <a class="btn ghost small" href="https://read.amazon.co.uk/kp/kshare?asin=B0HNKLZY16&amp;id=7uaseiqqqrd37kxqczuba6an6u" target="_blank" rel="noopener">Read a free sample</a>
+        </div>
+      </div>
+    </div>
     <h2>Settings</h2>
     <div class="card">
       <label class="f" for="userName">Your name</label>
@@ -290,7 +331,7 @@
   <button data-tab="plants"><span>🪴</span>Plants</button>
   <button data-tab="quoteday"><span>🍃</span>Quote</button>
   <button data-tab="wellbeing"><span>💚</span>Growth</button>
-  <button data-tab="settings"><span>⚙️</span>Settings</button>
+  <button data-tab="settings"><span>🌸</span>More</button>
 </nav>
 
 <dialog id="plantDlg">
