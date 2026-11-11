@@ -1,5 +1,5 @@
 // Floreamus Una service worker — lets the app open offline.
-const CACHE = 'floreamus-una-v7';
+const CACHE = 'floreamus-una-v8';
 const FILES = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png', './logo-header.webp'];
 
 self.addEventListener('install', e => {

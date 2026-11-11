@@ -211,6 +211,14 @@
       <button class="btn ghost small" id="qShare">Share</button>
       <button class="btn ghost small" id="qBreathe">Breathe with it</button>
     </div>
+    <h2>Share as an image</h2>
+    <div class="card">
+      <div class="sub" style="margin-bottom:10px">A branded quote card, ready for Instagram or TikTok.</div>
+      <div class="qactions" style="justify-content:flex-start;margin-top:0">
+        <button class="btn small" data-card="story">Story (9:16)</button>
+        <button class="btn small" data-card="post">Post (4:5)</button>
+      </div>
+    </div>
     <h2>Today's reflection</h2>
     <div class="card reflect"><b id="qPrompt"></b><span class="sub">Write your thoughts in today's check-in note, or simply sit with it.</span></div>
     <p class="sub" style="text-align:center;margin:14px 0 0" id="qNext"></p>
@@ -761,6 +769,62 @@
       else { await navigator.clipboard.writeText(text); toast('Quote copied'); }
     } catch(e){}
   };
+  // Quote card image (drawn on a canvas, then shared or downloaded)
+  async function makeQuoteCard(kind){
+    const W = 1080, H = kind === 'story' ? 1920 : 1350;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    try { await Promise.all([document.fonts.load('italic 500 80px "Cormorant Garamond"'), document.fonts.load('500 30px "Cinzel"')]); } catch(e){}
+    // background: warm cream with a soft sage glow
+    g.fillStyle = '#fbfaf5'; g.fillRect(0, 0, W, H);
+    let rg = g.createRadialGradient(W/2, H*0.18, 40, W/2, H*0.18, H*0.75);
+    rg.addColorStop(0, 'rgba(181,199,154,.55)'); rg.addColorStop(1, 'rgba(181,199,154,0)');
+    g.fillStyle = rg; g.fillRect(0, 0, W, H);
+    // thin inset frame
+    g.strokeStyle = 'rgba(127,160,74,.45)'; g.lineWidth = 2; g.strokeRect(48, 48, W-96, H-96);
+    // logo
+    const logo = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'logo-header.webp'; });
+    const logoW = kind === 'story' ? 520 : 400;
+    let y = kind === 'story' ? 170 : 110;
+    if (logo){ const lh = logoW * logo.height / logo.width; g.drawImage(logo, (W-logoW)/2, y, logoW, lh); y += lh; }
+    // quote text, wrapped and sized to fit
+    const q = `“${todaysQuote()}”`;
+    let maxW = W - 220, size = kind === 'story' ? 92 : 78, lines;
+    const wrap = () => { g.font = `italic 500 ${size}px "Cormorant Garamond", Georgia, serif`; const out = []; let line = '';
+      for (const w of q.split(' ')){ const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line){ out.push(line); line = w; } else line = t; }
+      out.push(line); return out; };
+    const room = (H - (kind === 'story' ? 330 : 230)) - y - 60;
+    do { lines = wrap(); } while (lines.length * size * 1.25 > room && (size -= 4) > 40);
+    // balance the lines: narrow the measure while the line count stays the same, so no word sits alone
+    const n = lines.length, full = maxW;
+    while (n > 1 && maxW > full * 0.5) { maxW -= 20; const t = wrap(); if (t.length > n) { maxW += 20; break; } lines = t; }
+    lines = wrap();
+    const lh = size * 1.25, top = y + 40 + (room - lines.length * lh) / 2 + size;
+    g.fillStyle = '#3d5f12'; g.textAlign = 'center';
+    lines.forEach((l, i) => g.fillText(l, W/2, top + i * lh));
+    // divider + footer
+    const fy = H - (kind === 'story' ? 250 : 170);
+    g.strokeStyle = '#b5c79a'; g.lineWidth = 2; g.beginPath(); g.moveTo(W/2-60, fy); g.lineTo(W/2+60, fy); g.stroke();
+    g.fillStyle = '#6f7b62'; g.font = '500 30px "Cinzel", Georgia, serif';
+    g.fillText('QUOTE OF THE DAY', W/2, fy + 60);
+    g.font = '500 32px "Cormorant Garamond", Georgia, serif'; g.fillStyle = '#3d5f12';
+    g.fillText('@plantpositivethoughts', W/2, fy + 108);
+    return new Promise(r => c.toBlob(r, 'image/png'));
+  }
+  document.querySelectorAll('[data-card]').forEach(b => b.onclick = async () => {
+    const kind = b.dataset.card; b.disabled = true;
+    try {
+      const blob = await makeQuoteCard(kind);
+      const file = new File([blob], `floreamus-una-quote-${todayStr()}-${kind}.png`, { type:'image/png' });
+      if (navigator.canShare && navigator.canShare({ files:[file] })) {
+        try { await navigator.share({ files:[file], title:'Quote of the day' }); } catch(e){}
+      } else {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click();
+        toast('Image saved');
+      }
+    } catch(e){ toast('Could not make the image'); }
+    b.disabled = false;
+  });
   $('quote').onclick = () => document.querySelector('nav button[data-tab=quoteday]').click();
 
   // ---------- One-minute breath: 6 cycles of 4s in, 6s out ----------
