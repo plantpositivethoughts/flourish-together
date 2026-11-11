@@ -94,6 +94,30 @@
   .days{display:flex;gap:6px;font-size:11px;color:var(--muted)} .days span{flex:1;text-align:center}
   .toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
   .toast.show{opacity:1}
+  /* Welcome / first run */
+  #welcome{position:fixed;inset:0;z-index:50;background:var(--bg);background-image:radial-gradient(ellipse at top,rgba(181,199,154,.35),transparent 65%);display:none;flex-direction:column;padding:calc(24px + env(safe-area-inset-top)) 28px calc(24px + env(safe-area-inset-bottom));text-align:center;overflow-y:auto}
+  #welcome.show{display:flex}
+  .wstep{display:none;flex:1;flex-direction:column;justify-content:center;align-items:center;animation:fade .4s ease}
+  .wstep.active{display:flex}
+  .wstep .wlogo{width:min(260px,70vw);height:auto;padding:8px;border-radius:24px}
+  @media (prefers-color-scheme:dark){.wstep .wlogo{background:#fbfaf5}}
+  .wstep h2{justify-content:center;font-size:15px;margin:22px 0 6px}
+  .wstep h2::after{display:none}
+  .wstep .big{font:italic 500 26px/1.3 var(--serif);color:var(--green);margin:6px 0 10px;max-width:22ch}
+  .wstep p{color:var(--muted);max-width:32ch;margin:4px auto}
+  .wfeat{list-style:none;padding:0;margin:18px 0 0;text-align:left;max-width:340px;width:100%}
+  .wfeat li{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+  .wfeat li:last-child{border-bottom:0}
+  .wfeat .ic{font-size:24px;width:44px;height:44px;flex:none;display:grid;place-items:center;background:var(--soft);border-radius:50%}
+  .wfeat b{display:block;font:600 19px/1.2 var(--serif);color:var(--ink)}
+  .wfeat span{font-size:14px;color:var(--muted)}
+  .wfoot{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:16px}
+  .wfoot .btn{min-width:220px;padding:13px 22px;font-size:17px}
+  .wlink{background:none;color:var(--muted);font-size:15px;padding:6px}
+  .dots{display:flex;gap:8px}
+  .dots i{width:7px;height:7px;border-radius:50%;background:var(--sage);opacity:.5;transition:all .25s}
+  .dots i.on{width:22px;border-radius:4px;background:var(--green);opacity:1}
+  .wstep input{max-width:300px;text-align:center;margin-top:18px;font-size:18px}
   .log{font-size:14px;color:var(--muted);margin:6px 0 0;padding-left:18px}
 </style>
 </head>
@@ -166,6 +190,9 @@
       <p class="sub">iPhone: Share → Add to Home Screen. Android: browser menu → Install app.</p>
     </div>
     <div class="card">
+      <button class="btn ghost small" id="replayWelcome">Show welcome again</button>
+    </div>
+    <div class="card">
       <button class="btn danger small" id="resetBtn">Delete all data</button>
     </div>
   </section>
@@ -211,6 +238,34 @@
     </div>
   </form>
 </dialog>
+
+<div id="welcome" role="dialog" aria-label="Welcome to Floreamus Una">
+  <div class="wstep active" data-step="0">
+    <img class="wlogo" src="logo-header.webp" alt="Floreamus Una — Let us flourish together" width="480" height="409">
+    <p class="big">A gentle space to care for your plants — and for yourself.</p>
+    <p>Floreamus Una means “let us flourish together.”</p>
+  </div>
+  <div class="wstep" data-step="1">
+    <h2>How it works</h2>
+    <ul class="wfeat">
+      <li><div class="ic">🪴</div><div><b>Tend your plants</b><span>Add each plant and see who needs water today.</span></div></li>
+      <li><div class="ic">💚</div><div><b>Check in with yourself</b><span>A quick mood, a few kind habits, a line in your journal.</span></div></li>
+      <li><div class="ic">🌱</div><div><b>Watch things grow</b><span>Streaks, moods and memories, all in one place.</span></div></li>
+      <li><div class="ic">🔒</div><div><b>Yours alone</b><span>Everything stays on this phone. No account, no ads.</span></div></li>
+    </ul>
+  </div>
+  <div class="wstep" data-step="2">
+    <h2>Before we begin</h2>
+    <p class="big">What should we call you?</p>
+    <input type="text" id="wName" placeholder="Your name (optional)" autocomplete="given-name">
+    <p style="margin-top:18px">Next, add your first plant. A photo makes it feel like home.</p>
+  </div>
+  <div class="wfoot">
+    <div class="dots"><i class="on"></i><i></i><i></i></div>
+    <button class="btn" id="wNext">Begin</button>
+    <button class="wlink" id="wSkip">Skip</button>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -461,8 +516,30 @@
     $('quote').textContent = QUOTES[Math.floor(Date.now()/DAY) % QUOTES.length];
     renderPlants(); renderCheckin(); renderGrowth(); renderSettings();
   }
+  // ---------- Welcome (first run) ----------
+  let wStep = 0;
+  const wLabels = ['Begin', 'Next', 'Add my first plant'];
+  function showStep(i){
+    wStep = i;
+    document.querySelectorAll('.wstep').forEach(s => s.classList.toggle('active', +s.dataset.step === i));
+    document.querySelectorAll('.dots i').forEach((d, j) => d.classList.toggle('on', j === i));
+    $('wNext').textContent = wLabels[i];
+    $('wSkip').textContent = i === 2 ? 'I’ll look around first' : 'Skip';
+  }
+  function openWelcome(){ $('wName').value = state.name || ''; showStep(0); $('welcome').classList.add('show'); }
+  function closeWelcome(addPlant){
+    const n = $('wName').value.trim(); if (n) state.name = n;
+    state.welcomed = true; save(); $('welcome').classList.remove('show'); renderAll();
+    if (addPlant) setTimeout(() => openDlg(), 250);
+  }
+  $('wNext').onclick = () => wStep < 2 ? showStep(wStep + 1) : closeWelcome(true);
+  $('wSkip').onclick = () => wStep < 2 ? showStep(2) : closeWelcome(false);
+  $('wName').addEventListener('keydown', e => { if (e.key === 'Enter') closeWelcome(true); });
+  $('replayWelcome').onclick = openWelcome;
+
   renderAll();
   loadPhotos().then(renderPlants);
+  if (!state.welcomed && !state.plants.length) openWelcome();
 
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
