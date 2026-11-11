@@ -610,7 +610,7 @@
   function plantCard(p, withWater){
     const n = nextDue(p);
     const emoji = (TYPES[p.type]||TYPES.Other).e;
-    const log = (p.log||[]).slice(-3).reverse().map(d=>`<li>Watered ${esc(d)}</li>`).join('');
+    const log = (p.log||[]).slice(-3).reverse().map(d=>`<li>Watered ${new Date(d).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"})}</li>`).join('');
     return `<div class="card">
       <div class="row">
         ${photos[p.id] ? `<img class="thumb" src="${photos[p.id]}" alt="">` : `<div class="emoji">${emoji}</div>`}
