@@ -94,6 +94,23 @@
   .days{display:flex;gap:6px;font-size:11px;color:var(--muted)} .days span{flex:1;text-align:center}
   .toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
   .toast.show{opacity:1}
+  /* Season tip + breathing */
+  .season{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,var(--soft),var(--card))}
+  .season .ic{font-size:26px;line-height:1}
+  .season b{font:600 19px/1.2 var(--serif);color:var(--green);display:block;margin-bottom:2px}
+  .season span{font-size:14px;color:var(--muted)}
+  .breathe-card{display:flex;align-items:center;gap:14px}
+  .breathe-card .orb{width:48px;height:48px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 35%,var(--sage),var(--leaf));animation:pulse 5s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(.82);opacity:.75}}
+  #breathe{position:fixed;inset:0;z-index:60;background:var(--bg);background-image:radial-gradient(circle at 50% 45%,rgba(181,199,154,.4),transparent 60%);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+  #breathe.show{display:flex}
+  .bwrap{position:relative;width:260px;height:260px;display:grid;place-items:center;margin:10px 0 30px}
+  .bring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--sage);opacity:.6}
+  .bcircle{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d6e4c0,var(--leaf));box-shadow:0 0 60px rgba(127,160,74,.45);transform:scale(1);transition:transform 4s ease-in-out}
+  .bcircle.in{transform:scale(2.2);transition-duration:4s}
+  .bcircle.out{transform:scale(1);transition-duration:6s}
+  #bText{font:italic 500 30px/1.2 var(--serif);color:var(--green);min-height:40px}
+  #bSub{color:var(--muted);margin:8px 0 26px;min-height:22px}
   /* Welcome / first run */
   #welcome{position:fixed;inset:0;z-index:50;background:var(--bg);background-image:radial-gradient(ellipse at top,rgba(181,199,154,.35),transparent 65%);display:none;flex-direction:column;padding:calc(24px + env(safe-area-inset-top)) 28px calc(24px + env(safe-area-inset-bottom));text-align:center;overflow-y:auto}
   #welcome.show{display:flex}
@@ -132,6 +149,7 @@
   <!-- TODAY -->
   <section id="today" class="active">
     <p class="quote" id="quote"></p>
+    <div class="card season" id="seasonTip"></div>
     <h2>Plants needing you</h2>
     <div id="dueList"></div>
     <h2>How are you today?</h2>
@@ -141,6 +159,12 @@
       <label class="f" for="journal">A small note for today (optional)</label>
       <textarea id="journal" placeholder="What grew today — in you or your plants?"></textarea>
       <div class="actions"><button class="btn" id="saveCheckin">Save check-in</button></div>
+    </div>
+    <h2>A moment for you</h2>
+    <div class="card breathe-card">
+      <div class="orb"></div>
+      <div class="grow"><div class="name">One-minute breath</div><div class="sub" id="breathCount">Slow down with six gentle breaths.</div></div>
+      <button class="btn small" id="breatheBtn">Begin</button>
     </div>
   </section>
 
@@ -172,6 +196,9 @@
     <div class="card">
       <label class="f" for="userName">Your name</label>
       <input type="text" id="userName" placeholder="Optional">
+      <label class="f" style="display:flex;align-items:center;gap:10px;color:var(--ink)"><input type="checkbox" id="seasonalOn"> Adjust watering for the seasons</label>
+      <label class="f" for="hemisphere">Where you live</label>
+      <select id="hemisphere"><option value="N">Northern hemisphere (UK, Europe, North America…)</option><option value="S">Southern hemisphere (Australia, South Africa…)</option></select>
       <label class="f">Daily self-care habits (one per line)</label>
       <textarea id="habitsEdit"></textarea>
       <div class="actions"><button class="btn" id="saveSettings">Save</button></div>
@@ -238,6 +265,13 @@
     </div>
   </form>
 </dialog>
+
+<div id="breathe" role="dialog" aria-label="One-minute breath">
+  <div class="bwrap"><div class="bring"></div><div class="bcircle" id="bCircle"></div></div>
+  <div id="bText">Get comfortable</div>
+  <div id="bSub">Breathe in as the circle grows, out as it softens.</div>
+  <button class="btn ghost" id="bClose">Close</button>
+</div>
 
 <div id="welcome" role="dialog" aria-label="Welcome to Floreamus Una">
   <div class="wstep active" data-step="0">
@@ -342,8 +376,28 @@
   const $ = id => document.getElementById(id);
   function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800); }
 
+  // ---------- Seasons ----------
+  const SEASONS = {
+    winter:{ e:'❄️', name:'Winter', k:1.5, tip:'Plants are resting. Water less often, pause feeding, and keep them away from radiators and cold draughts.' },
+    spring:{ e:'🌱', name:'Spring', k:1.0, tip:'New growth is waking up. Return to normal watering, start feeding again, and repot anything root-bound.' },
+    summer:{ e:'☀️', name:'Summer', k:0.8, tip:'Thirsty season. Check soil more often, shield delicate leaves from harsh midday sun, and mist ferns.' },
+    autumn:{ e:'🍂', name:'Autumn', k:1.2, tip:'Growth is slowing. Ease off watering, stop feeding, and move sun-lovers closer to the light.' }
+  };
+  function season(){
+    const m = new Date().getMonth(); // 0 = Jan
+    const n = m===11||m<2 ? 'winter' : m<5 ? 'spring' : m<8 ? 'summer' : 'autumn';
+    if (state.hemisphere !== 'S') return n;
+    return {winter:'summer',summer:'winter',spring:'autumn',autumn:'spring'}[n];
+  }
+  const seasonalOn = () => state.seasonal !== false;
+  const interval = p => seasonalOn() ? Math.max(1, Math.round(p.every * SEASONS[season()].k)) : p.every;
+  function renderSeason(){
+    const s = SEASONS[season()];
+    $('seasonTip').innerHTML = `<div class="ic">${s.e}</div><div><b>${s.name} care</b><span>${s.tip}${seasonalOn() && s.k !== 1 ? ` Watering schedules are ${s.k > 1 ? 'stretched' : 'shortened'} for the season.` : ''}</span></div>`;
+  }
+
   // ---------- Plants ----------
-  function nextDue(p){ return daysBetween(todayStr(), new Date(new Date(p.last).getTime() + p.every*DAY).toISOString().slice(0,10)); }
+  function nextDue(p){ return daysBetween(todayStr(), new Date(new Date(p.last).getTime() + interval(p)*DAY).toISOString().slice(0,10)); }
   function dueLabel(n){ return n < 0 ? `${-n} day${n===-1?'':'s'} overdue` : n === 0 ? 'Water today' : n === 1 ? 'Tomorrow' : `In ${n} days`; }
 
   function plantCard(p, withWater){
@@ -355,7 +409,7 @@
         ${photos[p.id] ? `<img class="thumb" src="${photos[p.id]}" alt="">` : `<div class="emoji">${emoji}</div>`}
         <div class="grow" data-edit="${p.id}" style="cursor:pointer">
           <div class="name">${esc(p.name)}</div>
-          <div class="sub">${esc(p.type)} · ${esc(p.light)}</div>
+          <div class="sub">${esc(p.type)} · every ${interval(p)} day${interval(p)===1?'':'s'}${interval(p)!==p.every?' '+SEASONS[season()].e:''}</div>
           <span class="pill ${n<=0?'due':''}">${dueLabel(n)}</span>
         </div>
         ${withWater || n<=0 ? `<button class="btn small" data-water="${p.id}">💧 Water</button>` : ''}
@@ -448,7 +502,7 @@
   });
   $('saveCheckin').onclick = () => {
     const habits = [...document.querySelectorAll('[data-habit]')].filter(x=>x.checked).map(x=>state.habits[+x.dataset.habit]);
-    state.checkins[todayStr()] = { mood, habits, note:$('journal').value.trim() };
+    state.checkins[todayStr()] = { ...(state.checkins[todayStr()] || {}), mood, habits, note:$('journal').value.trim() };
     save(); renderAll(); toast('Check-in saved 💚');
   };
 
@@ -476,9 +530,10 @@
   }
 
   // ---------- Settings ----------
-  function renderSettings(){ $('userName').value = state.name||''; $('habitsEdit').value = state.habits.join('\n'); }
+  function renderSettings(){ $('userName').value = state.name||''; $('habitsEdit').value = state.habits.join('\n'); $('seasonalOn').checked = seasonalOn(); $('hemisphere').value = state.hemisphere || 'N'; }
   $('saveSettings').onclick = () => {
     state.name = $('userName').value.trim();
+    state.seasonal = $('seasonalOn').checked; state.hemisphere = $('hemisphere').value;
     const h = $('habitsEdit').value.split('\n').map(s=>s.trim()).filter(Boolean);
     if(h.length) state.habits = h.slice(0,10);
     save(); renderAll(); toast('Settings saved');
@@ -514,8 +569,33 @@
     const part = h<12?'Good morning':h<18?'Good afternoon':'Good evening';
     $('greeting').textContent = state.name ? `${part}, ${state.name}` : part;
     $('quote').textContent = QUOTES[Math.floor(Date.now()/DAY) % QUOTES.length];
-    renderPlants(); renderCheckin(); renderGrowth(); renderSettings();
+    renderSeason(); renderPlants(); renderCheckin(); renderGrowth(); renderSettings(); renderBreathCount();
   }
+  // ---------- One-minute breath: 6 cycles of 4s in, 6s out ----------
+  let bTimers = [];
+  const clearB = () => { bTimers.forEach(clearTimeout); bTimers = []; };
+  function renderBreathCount(){
+    const n = state.checkins[todayStr()]?.breaths || 0;
+    $('breathCount').textContent = n ? `Done ${n} time${n===1?'':'s'} today. Lovely.` : 'Slow down with six gentle breaths.';
+  }
+  function startBreath(){
+    clearB(); const c = $('bCircle'); c.className = 'bcircle';
+    $('bText').textContent = 'Get comfortable'; $('bSub').textContent = 'Breathe in as the circle grows, out as it softens.';
+    $('bClose').textContent = 'Close'; $('breathe').classList.add('show');
+    const CYCLES = 6, at = (ms, fn) => bTimers.push(setTimeout(fn, ms));
+    for (let i = 0; i < CYCLES; i++){
+      const t = 3000 + i * 10000;
+      at(t, () => { c.className = 'bcircle in'; $('bText').textContent = 'Breathe in…'; $('bSub').textContent = `${i+1} of ${CYCLES}`; });
+      at(t + 4000, () => { c.className = 'bcircle out'; $('bText').textContent = 'and out…'; });
+    }
+    at(3000 + CYCLES * 10000, () => {
+      $('bText').textContent = 'Well done 🌿'; $('bSub').textContent = 'Carry this calm with you.'; $('bClose').textContent = 'Finish';
+      const c0 = state.checkins[todayStr()] || {}; c0.breaths = (c0.breaths || 0) + 1; state.checkins[todayStr()] = c0; save(); renderBreathCount(); renderGrowth();
+    });
+  }
+  $('breatheBtn').onclick = startBreath;
+  $('bClose').onclick = () => { clearB(); $('breathe').classList.remove('show'); };
+
   // ---------- Welcome (first run) ----------
   let wStep = 0;
   const wLabels = ['Begin', 'Next', 'Add my first plant'];
