@@ -2,7 +2,13 @@
 
 *Let us flourish together.* A free plant-care and self-care app that runs in the browser and installs to your phone's home screen.
 
+**Live app:** https://plantpositivethoughts.github.io/flourish-together/
+
 ## Features
+- **Welcome screens** for first-time users
+- **Plant photos** stored on-device, included in backups
+- **Seasonal watering**: schedules adjust for winter, spring, summer and autumn
+- **One-minute breath**: a guided breathing moment
 - **Plant collection** with types, light, notes and watering intervals
 - **Today view** showing which plants need water, with one-tap watering
 - **Daily check-in**: mood, self-care habits, a short journal note
