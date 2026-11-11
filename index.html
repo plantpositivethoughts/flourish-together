@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5d46">
+<meta name="description" content="Floreamus Una — let us flourish together. Plant care and gentle self-care in one place.">
+<title>Floreamus Una</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+  :root{
+    --bg:#f6f3ec; --card:#ffffff; --ink:#1f2a24; --muted:#6b7a71;
+    --green:#2f5d46; --leaf:#5f9e6e; --soft:#e4efe6; --warn:#c0702f; --warnbg:#fbeee2;
+    --line:#e3ddd0; --radius:16px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#121714;--card:#1b221e;--ink:#e8efe9;--muted:#9aaba0;--soft:#22322a;--line:#2b3730;--warnbg:#3a2a1d}
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:calc(18px + env(safe-area-inset-top)) 20px 8px}
+  header h1{margin:0;font-size:24px;letter-spacing:.2px;color:var(--green)}
+  @media (prefers-color-scheme:dark){header h1{color:var(--leaf)}}
+  header p{margin:2px 0 0;color:var(--muted);font-size:14px}
+  main{padding:8px 16px calc(96px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+  section{display:none} section.active{display:block}
+  h2{font-size:18px;margin:18px 4px 10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+  .row{display:flex;align-items:center;gap:12px}
+  .grow{flex:1;min-width:0}
+  .name{font-weight:600}
+  .sub{color:var(--muted);font-size:14px}
+  .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--soft);color:var(--green)}
+  @media (prefers-color-scheme:dark){.pill{color:var(--leaf)}}
+  .pill.due{background:var(--warnbg);color:var(--warn)}
+  .emoji{font-size:28px;width:44px;height:44px;display:grid;place-items:center;background:var(--soft);border-radius:12px;flex:none}
+  button{font:inherit;border:0;border-radius:12px;padding:10px 14px;cursor:pointer}
+  .btn{background:var(--green);color:#fff}
+  .btn.ghost{background:var(--soft);color:var(--ink)}
+  .btn.small{padding:7px 12px;font-size:14px}
+  .btn.danger{background:transparent;color:var(--warn);border:1px solid var(--warn)}
+  .fab{position:fixed;right:18px;bottom:calc(84px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;font-size:28px;background:var(--green);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+  nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1;background:none;color:var(--muted);padding:10px 4px 12px;font-size:12px;border-radius:0}
+  nav button span{display:block;font-size:22px}
+  nav button.active{color:var(--green)}
+  @media (prefers-color-scheme:dark){nav button.active{color:var(--leaf)}}
+  .empty{text-align:center;color:var(--muted);padding:28px 12px}
+  .quote{font-style:italic;color:var(--muted);border-left:3px solid var(--leaf);padding-left:12px;margin:6px 4px 14px}
+  .moods{display:flex;justify-content:space-between;gap:6px;margin:8px 0}
+  .moods button{flex:1;font-size:26px;background:var(--soft);padding:10px 0}
+  .moods button.sel{outline:3px solid var(--leaf)}
+  .checks label{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .checks label:last-child{border-bottom:0}
+  input[type=checkbox]{width:22px;height:22px;accent-color:var(--green)}
+  label.f{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+  input[type=text],input[type=number],input[type=date],select,textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+  textarea{min-height:80px;resize:vertical}
+  dialog{border:0;border-radius:20px;padding:0;width:min(560px,94vw);background:var(--card);color:var(--ink)}
+  dialog::backdrop{background:rgba(0,0,0,.4)}
+  dialog form{padding:18px 18px 16px}
+  dialog h3{margin:0 0 4px}
+  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+  .streak{font-size:34px;font-weight:700;color:var(--green)}
+  @media (prefers-color-scheme:dark){.streak{color:var(--leaf)}}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:10px}
+  .bars div{flex:1;background:var(--leaf);border-radius:6px 6px 2px 2px;min-height:4px;opacity:.85}
+  .bars div.none{background:var(--line)}
+  .days{display:flex;gap:6px;font-size:11px;color:var(--muted)} .days span{flex:1;text-align:center}
+  .toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .log{font-size:14px;color:var(--muted);margin:6px 0 0;padding-left:18px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌿 Floreamus Una</h1>
+  <p id="greeting">Let us flourish together.</p>
+</header>
+
+<main>
+  <!-- TODAY -->
+  <section id="today" class="active">
+    <p class="quote" id="quote"></p>
+    <h2>Plants needing you</h2>
+    <div id="dueList"></div>
+    <h2>How are you today?</h2>
+    <div class="card">
+      <div class="moods" id="moodPicker"></div>
+      <div class="checks" id="habitChecks"></div>
+      <label class="f" for="journal">A small note for today (optional)</label>
+      <textarea id="journal" placeholder="What grew today — in you or your plants?"></textarea>
+      <div class="actions"><button class="btn" id="saveCheckin">Save check-in</button></div>
+    </div>
+  </section>
+
+  <!-- PLANTS -->
+  <section id="plants">
+    <h2>My plants</h2>
+    <div id="plantList"></div>
+  </section>
+
+  <!-- WELLBEING -->
+  <section id="wellbeing">
+    <h2>Your growth</h2>
+    <div class="card row">
+      <div class="grow"><div class="sub">Check-in streak</div><div class="streak" id="streak">0</div></div>
+      <div class="grow"><div class="sub">Plants cared for this week</div><div class="streak" id="weekCare">0</div></div>
+    </div>
+    <div class="card">
+      <div class="sub">Mood, last 7 days</div>
+      <div class="bars" id="moodBars"></div>
+      <div class="days" id="moodDays"></div>
+    </div>
+    <h2>Journal</h2>
+    <div id="journalList"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings">
+    <h2>Settings</h2>
+    <div class="card">
+      <label class="f" for="userName">Your name</label>
+      <input type="text" id="userName" placeholder="Optional">
+      <label class="f">Daily self-care habits (one per line)</label>
+      <textarea id="habitsEdit"></textarea>
+      <div class="actions"><button class="btn" id="saveSettings">Save</button></div>
+    </div>
+    <div class="card">
+      <div class="name">Backup</div>
+      <p class="sub">Your data stays on this device. Export a backup now and then, or to move to a new phone.</p>
+      <div class="actions" style="justify-content:flex-start">
+        <button class="btn ghost small" id="exportBtn">Export backup</button>
+        <button class="btn ghost small" id="importBtn">Import backup</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+    </div>
+    <div class="card">
+      <div class="name">Install on your phone</div>
+      <p class="sub">iPhone: Share → Add to Home Screen. Android: browser menu → Install app.</p>
+    </div>
+    <div class="card">
+      <button class="btn danger small" id="resetBtn">Delete all data</button>
+    </div>
+  </section>
+</main>
+
+<button class="fab" id="addBtn" aria-label="Add plant">+</button>
+
+<nav>
+  <button data-tab="today" class="active"><span>☀️</span>Today</button>
+  <button data-tab="plants"><span>🪴</span>Plants</button>
+  <button data-tab="wellbeing"><span>💚</span>Growth</button>
+  <button data-tab="settings"><span>⚙️</span>Settings</button>
+</nav>
+
+<dialog id="plantDlg">
+  <form method="dialog" id="plantForm">
+    <h3 id="dlgTitle">Add a plant</h3>
+    <label class="f" for="pName">Name</label>
+    <input type="text" id="pName" required placeholder="e.g. Fern by the window">
+    <label class="f" for="pType">Type</label>
+    <select id="pType"></select>
+    <label class="f" for="pEvery">Water every (days)</label>
+    <input type="number" id="pEvery" min="1" max="60" value="7">
+    <label class="f" for="pLast">Last watered</label>
+    <input type="date" id="pLast">
+    <label class="f" for="pLight">Light</label>
+    <select id="pLight"><option>Bright indirect</option><option>Direct sun</option><option>Medium</option><option>Low light</option></select>
+    <label class="f" for="pNotes">Notes</label>
+    <textarea id="pNotes" placeholder="Soil, feeding, quirks…"></textarea>
+    <div class="actions">
+      <button type="button" class="btn danger small" id="pDelete" hidden>Delete</button>
+      <button type="button" class="btn ghost" id="pCancel">Cancel</button>
+      <button type="submit" class="btn">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const KEY = 'floreamus-una-v1';
+  const TYPES = {
+    'Monstera':{e:'🌿',d:7},'Pothos':{e:'🍃',d:7},'Snake plant':{e:'🌵',d:14},'Succulent':{e:'🪴',d:14},
+    'Cactus':{e:'🌵',d:21},'Fern':{e:'🌿',d:3},'Peace lily':{e:'🌸',d:5},'Herb':{e:'🌱',d:2},
+    'Orchid':{e:'🌺',d:7},'Fiddle-leaf fig':{e:'🌳',d:7},'ZZ plant':{e:'🍀',d:14},'Other':{e:'🌱',d:7}
+  };
+  const MOODS = ['😞','😕','😐','🙂','😄'];
+  const QUOTES = [
+    'Water yourself as you water your plants.',
+    'Growth is slow, then sudden. Keep tending.',
+    'A few minutes with something green is a few minutes well spent.',
+    'Rest is part of the growing season.',
+    'Small, steady care beats grand gestures.',
+    'Notice one new leaf today — on a plant, or in yourself.',
+    'Roots first. Blooms later.'
+  ];
+  const DAY = 86400000;
+  const todayStr = () => new Date().toISOString().slice(0,10);
+  const daysBetween = (a,b) => Math.round((new Date(b) - new Date(a)) / DAY);
+  const uid = () => Math.random().toString(36).slice(2,10);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  let state = load();
+  function load(){
+    try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.plants) return s; } catch(e){}
+    return { name:'', plants:[], checkins:{}, habits:['Drink a glass of water','Step outside for 5 minutes','Stretch or breathe deeply','Spend a moment with your plants'] };
+  }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){ toast('Could not save on this device'); } }
+
+  const $ = id => document.getElementById(id);
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800); }
+
+  // ---------- Plants ----------
+  function nextDue(p){ return daysBetween(todayStr(), new Date(new Date(p.last).getTime() + p.every*DAY).toISOString().slice(0,10)); }
+  function dueLabel(n){ return n < 0 ? `${-n} day${n===-1?'':'s'} overdue` : n === 0 ? 'Water today' : n === 1 ? 'Tomorrow' : `In ${n} days`; }
+
+  function plantCard(p, withWater){
+    const n = nextDue(p);
+    const emoji = (TYPES[p.type]||TYPES.Other).e;
+    const log = (p.log||[]).slice(-3).reverse().map(d=>`<li>Watered ${esc(d)}</li>`).join('');
+    return `<div class="card">
+      <div class="row">
+        <div class="emoji">${emoji}</div>
+        <div class="grow" data-edit="${p.id}" style="cursor:pointer">
+          <div class="name">${esc(p.name)}</div>
+          <div class="sub">${esc(p.type)} · ${esc(p.light)}</div>
+          <span class="pill ${n<=0?'due':''}">${dueLabel(n)}</span>
+        </div>
+        ${withWater || n<=0 ? `<button class="btn small" data-water="${p.id}">💧 Water</button>` : ''}
+      </div>
+      ${!withWater && p.notes ? `<p class="sub" style="margin:8px 0 0">${esc(p.notes)}</p>` : ''}
+      ${!withWater && log ? `<ul class="log">${log}</ul>` : ''}
+    </div>`;
+  }
+
+  function renderPlants(){
+    const sorted = [...state.plants].sort((a,b)=>nextDue(a)-nextDue(b));
+    $('plantList').innerHTML = sorted.length ? sorted.map(p=>plantCard(p,false)).join('')
+      : `<div class="empty">No plants yet.<br>Tap <b>+</b> to add your first one.</div>`;
+    const due = sorted.filter(p=>nextDue(p)<=0);
+    $('dueList').innerHTML = due.length ? due.map(p=>plantCard(p,true)).join('')
+      : `<div class="card empty">${state.plants.length ? 'All your plants are happy today 🌱' : 'Add a plant to start your care routine.'}</div>`;
+  }
+
+  function water(id){
+    const p = state.plants.find(x=>x.id===id); if(!p) return;
+    p.last = todayStr(); p.log = [...(p.log||[]), todayStr()].slice(-30);
+    save(); renderAll(); toast(`${p.name} watered 💧`);
+  }
+
+  // ---------- Dialog ----------
+  const dlg = $('plantDlg'); let editing = null;
+  $('pType').innerHTML = Object.keys(TYPES).map(t=>`<option>${t}</option>`).join('');
+  $('pType').addEventListener('change', e => { if(!editing) $('pEvery').value = TYPES[e.target.value].d; });
+  function openDlg(p){
+    editing = p || null;
+    $('dlgTitle').textContent = p ? 'Edit plant' : 'Add a plant';
+    $('pName').value = p?.name || '';
+    $('pType').value = p?.type || 'Monstera';
+    $('pEvery').value = p?.every || TYPES['Monstera'].d;
+    $('pLast').value = p?.last || todayStr();
+    $('pLight').value = p?.light || 'Bright indirect';
+    $('pNotes').value = p?.notes || '';
+    $('pDelete').hidden = !p;
+    dlg.showModal();
+  }
+  $('plantForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const data = { name:$('pName').value.trim(), type:$('pType').value, every:Math.max(1,parseInt($('pEvery').value)||7),
+                   last:$('pLast').value||todayStr(), light:$('pLight').value, notes:$('pNotes').value.trim() };
+    if(!data.name) return;
+    if(editing) Object.assign(editing, data); else state.plants.push({ id:uid(), log:[], ...data });
+    save(); dlg.close(); renderAll(); toast(editing ? 'Saved' : 'Welcome to the family 🌱');
+  });
+  $('pCancel').onclick = () => dlg.close();
+  $('pDelete').onclick = () => {
+    if(editing && confirm(`Remove ${editing.name}?`)){ state.plants = state.plants.filter(p=>p!==editing); save(); dlg.close(); renderAll(); }
+  };
+  $('addBtn').onclick = () => openDlg();
+
+  document.addEventListener('click', e => {
+    const w = e.target.closest('[data-water]'); if(w){ water(w.dataset.water); return; }
+    const ed = e.target.closest('[data-edit]'); if(ed){ openDlg(state.plants.find(p=>p.id===ed.dataset.edit)); }
+  });
+
+  // ---------- Check-in ----------
+  let mood = null;
+  function renderCheckin(){
+    const c = state.checkins[todayStr()] || {};
+    mood = c.mood ?? null;
+    $('moodPicker').innerHTML = MOODS.map((m,i)=>`<button type="button" data-mood="${i}" class="${mood===i?'sel':''}" aria-label="Mood ${i+1} of 5">${m}</button>`).join('');
+    $('habitChecks').innerHTML = state.habits.map((h,i)=>`<label><input type="checkbox" data-habit="${i}" ${(c.habits||[]).includes(h)?'checked':''}> ${esc(h)}</label>`).join('');
+    $('journal').value = c.note || '';
+  }
+  $('moodPicker').addEventListener('click', e => {
+    const b = e.target.closest('[data-mood]'); if(!b) return;
+    mood = +b.dataset.mood;
+    [...$('moodPicker').children].forEach(x=>x.classList.toggle('sel', x===b));
+  });
+  $('saveCheckin').onclick = () => {
+    const habits = [...document.querySelectorAll('[data-habit]')].filter(x=>x.checked).map(x=>state.habits[+x.dataset.habit]);
+    state.checkins[todayStr()] = { mood, habits, note:$('journal').value.trim() };
+    save(); renderAll(); toast('Check-in saved 💚');
+  };
+
+  // ---------- Growth ----------
+  function renderGrowth(){
+    let streak = 0, d = new Date();
+    if(!state.checkins[todayStr()]) d = new Date(Date.now()-DAY);
+    while(state.checkins[d.toISOString().slice(0,10)]){ streak++; d = new Date(d.getTime()-DAY); }
+    $('streak').textContent = streak;
+
+    const weekAgo = new Date(Date.now()-6*DAY).toISOString().slice(0,10);
+    $('weekCare').textContent = state.plants.reduce((n,p)=>n+(p.log||[]).filter(x=>x>=weekAgo).length,0);
+
+    const days = [...Array(7)].map((_,i)=>new Date(Date.now()-(6-i)*DAY));
+    $('moodBars').innerHTML = days.map(x=>{ const m = state.checkins[x.toISOString().slice(0,10)]?.mood;
+      return m==null ? `<div class="none" style="height:6%"></div>` : `<div style="height:${(m+1)*20}%" title="${MOODS[m]}"></div>`; }).join('');
+    $('moodDays').innerHTML = days.map(x=>`<span>${x.toLocaleDateString(undefined,{weekday:'narrow'})}</span>`).join('');
+
+    const entries = Object.entries(state.checkins).filter(([,c])=>c.note || c.mood!=null).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,30);
+    $('journalList').innerHTML = entries.length ? entries.map(([date,c])=>`<div class="card">
+        <div class="row"><div class="grow sub">${new Date(date).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}</div><div>${c.mood!=null?MOODS[c.mood]:''}</div></div>
+        ${c.note?`<div style="margin-top:4px">${esc(c.note)}</div>`:''}
+        ${c.habits?.length?`<div class="sub" style="margin-top:4px">✓ ${c.habits.map(esc).join(' · ')}</div>`:''}
+      </div>`).join('') : `<div class="empty">Your check-ins will appear here.</div>`;
+  }
+
+  // ---------- Settings ----------
+  function renderSettings(){ $('userName').value = state.name||''; $('habitsEdit').value = state.habits.join('\n'); }
+  $('saveSettings').onclick = () => {
+    state.name = $('userName').value.trim();
+    const h = $('habitsEdit').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    if(h.length) state.habits = h.slice(0,10);
+    save(); renderAll(); toast('Settings saved');
+  };
+  $('exportBtn').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));
+    a.download = `floreamus-una-backup-${todayStr()}.json`; a.click();
+  };
+  $('importBtn').onclick = () => $('importFile').click();
+  $('importFile').onchange = async e => {
+    try{ const s = JSON.parse(await e.target.files[0].text()); if(!s.plants) throw 0; state = s; save(); renderAll(); toast('Backup restored'); }
+    catch{ toast('That file isn’t a Floreamus Una backup'); }
+    e.target.value='';
+  };
+  $('resetBtn').onclick = () => { if(confirm('Delete all plants and check-ins? This cannot be undone.')){ localStorage.removeItem(KEY); state = load(); renderAll(); } };
+
+  // ---------- Nav & boot ----------
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active', x===b));
+    document.querySelectorAll('section').forEach(s=>s.classList.toggle('active', s.id===b.dataset.tab));
+    $('addBtn').style.display = ['today','plants'].includes(b.dataset.tab) ? '' : 'none';
+    window.scrollTo(0,0);
+  });
+
+  function renderAll(){
+    const h = new Date().getHours();
+    const part = h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+    $('greeting').textContent = state.name ? `${part}, ${state.name}.` : `${part}. Let us flourish together.`;
+    $('quote').textContent = QUOTES[Math.floor(Date.now()/DAY) % QUOTES.length];
+    renderPlants(); renderCheckin(); renderGrowth(); renderSettings();
+  }
+  renderAll();
+
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>

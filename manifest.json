@@ -1,0 +1,13 @@
+{
+  "name": "Floreamus Una",
+  "short_name": "Floreamus",
+  "description": "Plant care and gentle self-care — let us flourish together.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f3ec",
+  "theme_color": "#2f5d46",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
