@@ -2,7 +2,7 @@
 
 *Let us flourish together.* A free plant-care and self-care app that runs in the browser and installs to your phone's home screen.
 
-**Live app:** https://plantpositivethoughts.github.io/flourish-together/
+**Live app:** https://app.floreamusuna.co.uk/
 
 ## Features
 - **Welcome screens** for first-time users
