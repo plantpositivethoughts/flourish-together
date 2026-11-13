@@ -65,6 +65,14 @@
   .sub{color:var(--muted);font-size:14px}
   .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--soft);color:var(--green)}
   .pill.due{background:var(--warnbg);color:var(--warn)}
+  .pill.pet{margin-left:4px}
+  .plant-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .links-card{padding:4px 0}
+  .links-card a{display:flex;gap:12px;align-items:center;padding:12px 16px;text-decoration:none;color:var(--ink);border-bottom:1px solid var(--line)}
+  .links-card a:last-child{border-bottom:0}
+  .links-card span{font-size:20px;width:28px;text-align:center}
+  .links-card b{display:block;font-weight:500}
+  .links-card small{color:var(--muted);font-size:13px}
   .thumb{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--card);box-shadow:0 0 0 1px var(--sage)}
   .photo-field{display:flex;align-items:center;gap:12px;margin-top:4px}
   .photo-preview{width:72px;height:72px;border-radius:50%;background:var(--soft) center/cover no-repeat;border:1px dashed var(--sage);display:grid;place-items:center;font-size:28px;flex:none}
@@ -279,6 +287,14 @@
         <a class="btn ghost small" href="https://www.tiktok.com/@floreamus.una" target="_blank" rel="noopener">TikTok</a>
       </div>
     </div>
+    <h2>On the website</h2>
+    <div class="card links-card">
+      <a href="https://floreamusuna.co.uk/the-greenroom.html" target="_blank" rel="noopener"><span>📖</span><div><b>Plant care guides</b><small>Step-by-step guides for 20 houseplants</small></div></a>
+      <a href="https://floreamusuna.co.uk/the-quiet-corner.html" target="_blank" rel="noopener"><span>🕊️</span><div><b>The Quiet Corner</b><small>Five-minute exercises for busy days</small></div></a>
+      <a href="https://floreamusuna.co.uk/the-listening-room.html" target="_blank" rel="noopener"><span>🎵</span><div><b>The Listening Room</b><small>Album of the month and what we're playing</small></div></a>
+      <a href="https://floreamusuna.co.uk/the-seed-library.html" target="_blank" rel="noopener"><span>🌱</span><div><b>The Seed Library</b><small>Trusted plant and wellbeing support</small></div></a>
+      <a href="https://floreamusuna.co.uk/" target="_blank" rel="noopener"><span>🌿</span><div><b>floreamusuna.co.uk</b><small>Everything Floreamus Una</small></div></a>
+    </div>
     <h2>The book</h2>
     <div class="card book" id="book">
       <div class="cover" style="padding:0;background:none"><img src="book-cover.webp" alt="Life in Full Bloom book cover" width="300" height="469" loading="lazy"></div>
@@ -324,7 +340,7 @@
   </section>
 </main>
 
-<button class="fab" id="addBtn" aria-label="Add plant">+</button>
+<button class="fab" id="addBtn" aria-label="Add plant" style="display:none">+</button>
 
 <nav>
   <button data-tab="today" class="active"><span>☀️</span>Today</button>
@@ -350,6 +366,7 @@
     <input type="text" id="pName" required placeholder="e.g. Fern by the window">
     <label class="f" for="pType">Type</label>
     <select id="pType"></select>
+    <p class="sub" id="pPet" style="margin:6px 0 0"></p>
     <label class="f" for="pEvery">Water every (days)</label>
     <input type="number" id="pEvery" min="1" max="60" value="7">
     <label class="f" for="pLast">Last watered</label>
@@ -406,11 +423,37 @@
 <script>
 (() => {
   const KEY = 'floreamus-una-v1';
+  // Plant types. pet: true = non-toxic to cats and dogs, false = keep away from pets (matches the website).
+  // g: the care guide page on floreamusuna.co.uk
   const TYPES = {
-    'Monstera':{e:'🌿',d:7},'Pothos':{e:'🍃',d:7},'Snake plant':{e:'🌵',d:14},'Succulent':{e:'🪴',d:14},
-    'Cactus':{e:'🌵',d:21},'Fern':{e:'🌿',d:3},'Peace lily':{e:'🌸',d:5},'Herb':{e:'🌱',d:2},
-    'Orchid':{e:'🌺',d:7},'Fiddle-leaf fig':{e:'🌳',d:7},'ZZ plant':{e:'🍀',d:14},'Other':{e:'🌱',d:7}
+    'Alocasia':{e:'🌿',d:7,pet:false,g:'alocasia'},
+    'Bird\'s nest fern':{e:'🌿',d:5,pet:true,g:'bird-s-nest-fern'},
+    'Boston fern':{e:'🌿',d:3,pet:true,g:'boston-fern'},
+    'Cactus':{e:'🌵',d:21},
+    'Calathea':{e:'🍃',d:5,pet:true,g:'calathea'},
+    'Cast iron plant':{e:'🌿',d:14,pet:true,g:'cast-iron-plant'},
+    'Chinese evergreen':{e:'🍃',d:10,pet:false,g:'chinese-evergreen'},
+    'Fern':{e:'🌿',d:3},
+    'Fiddle-leaf fig':{e:'🌳',d:7,pet:false,g:'fiddle-leaf-fig'},
+    'Haworthia':{e:'🪴',d:21,pet:true,g:'haworthia'},
+    'Heartleaf philodendron':{e:'🍃',d:7,pet:false,g:'heartleaf-philodendron'},
+    'Herb':{e:'🌱',d:2},
+    'Monstera':{e:'🌿',d:7,pet:false,g:'monstera'},
+    'Orchid':{e:'🌺',d:7},
+    'Parlour palm':{e:'🌴',d:7,pet:true,g:'parlour-palm'},
+    'Peace lily':{e:'🌸',d:5,pet:false,g:'peace-lily'},
+    'Peperomia':{e:'🪴',d:10,pet:true,g:'peperomia'},
+    'Ponytail palm':{e:'🌴',d:18,pet:true,g:'ponytail-palm'},
+    'Pothos':{e:'🍃',d:7,pet:false,g:'golden-pothos'},
+    'Prayer plant':{e:'🍃',d:5,pet:true,g:'prayer-plant'},
+    'Rubber plant':{e:'🌳',d:10,pet:false,g:'rubber-plant'},
+    'Snake plant':{e:'🌵',d:14,pet:false,g:'snake-plant'},
+    'Spider plant':{e:'🌱',d:7,pet:true,g:'spider-plant'},
+    'Succulent':{e:'🪴',d:14},
+    'ZZ plant':{e:'🍀',d:14,pet:false,g:'zz-plant'},
+    'Other':{e:'🌱',d:7}
   };
+  const GUIDE = g => `https://floreamusuna.co.uk/${g}-care.html`;
   const MOODS = ['😞','😕','😐','🙂','😄'];
   // Original Floreamus Una mindfulness quotes: one per day, cycling through the list
   const QUOTES = [
@@ -607,6 +650,10 @@
   function nextDue(p){ return daysBetween(todayStr(), new Date(new Date(p.last).getTime() + interval(p)*DAY).toISOString().slice(0,10)); }
   function dueLabel(n){ return n < 0 ? `${-n} day${n===-1?'':'s'} overdue` : n === 0 ? 'Water today' : n === 1 ? 'Tomorrow' : `In ${n} days`; }
 
+  function petPill(p){
+    const pet = (TYPES[p.type]||{}).pet;
+    return pet === true ? '<span class="pill pet">🐾 Pet-safe</span>' : pet === false ? '<span class="pill due">🐾 Keep away from pets</span>' : '';
+  }
   function plantCard(p, withWater){
     const n = nextDue(p);
     const emoji = (TYPES[p.type]||TYPES.Other).e;
@@ -618,10 +665,12 @@
           <div class="name">${esc(p.name)}</div>
           <div class="sub">${esc(p.type)} · every ${interval(p)} day${interval(p)===1?'':'s'}${interval(p)!==p.every?' '+SEASONS[season()].e:''}</div>
           <span class="pill ${n<=0?'due':''}">${dueLabel(n)}</span>
+          ${petPill(p)}
         </div>
         ${withWater || n<=0 ? `<button class="btn small" data-water="${p.id}">💧 Water</button>` : ''}
       </div>
       ${!withWater && p.notes ? `<p class="sub" style="margin:8px 0 0">${esc(p.notes)}</p>` : ''}
+      ${!withWater ? `<div class="plant-links">${(TYPES[p.type]||{}).g ? `<a class="btn ghost small" href="${GUIDE(TYPES[p.type].g)}" target="_blank" rel="noopener">📖 Care guide</a>` : ''}<button class="btn ghost small" data-remind="${p.id}">📅 Add reminder</button></div>` : ''}
       ${!withWater && log ? `<ul class="log">${log}</ul>` : ''}
     </div>`;
   }
@@ -632,7 +681,31 @@
       : `<div class="empty">No plants yet.<br>Tap <b>+</b> to add your first one.</div>`;
     const due = sorted.filter(p=>nextDue(p)<=0);
     $('dueList').innerHTML = due.length ? due.map(p=>plantCard(p,true)).join('')
-      : `<div class="card empty">${state.plants.length ? 'All your plants are happy today 🌱' : 'Add a plant to start your care routine.'}</div>`;
+      : `<div class="card empty">${state.plants.length ? 'All your plants are happy today 🌱' : 'Add a plant to start your care routine.<br><button class="btn small" data-add style="margin-top:10px">+ Add a plant</button>'}</div>`;
+  }
+
+  // ---------- Calendar reminders ----------
+  function remind(id){
+    const p = state.plants.find(x=>x.id===id); if(!p) return;
+    const every = interval(p);
+    const n = Math.max(0, nextDue(p));
+    const start = new Date(Date.now() + n*DAY);
+    const ymd = d => d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+    const stamp = new Date().toISOString().replace(/[-:]/g,'').slice(0,15) + 'Z';
+    const clean = s => String(s).replace(/[\\;,]/g, m => '\\' + m).replace(/\n/g,' ');
+    const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Floreamus Una//Plant care//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT',
+      `UID:${p.id}-${Date.now()}@app.floreamusuna.co.uk`, `DTSTAMP:${stamp}`,
+      `DTSTART:${ymd(start)}T090000`, `DTEND:${ymd(start)}T091500`,
+      `RRULE:FREQ=DAILY;INTERVAL=${every}`,
+      `SUMMARY:Water ${clean(p.name)} 💧`,
+      `DESCRIPTION:Time to check on ${clean(p.name)}. Tap Water in the Floreamus Una app: https://app.floreamusuna.co.uk/`,
+      'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:Water ${clean(p.name)}`,'TRIGGER:PT0M','END:VALARM',
+      'END:VEVENT','END:VCALENDAR'].join('\r\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+    a.download = `water-${p.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.ics`;
+    document.body.appendChild(a); a.click(); a.remove();
+    toast(`Reminder every ${every} day${every===1?'':'s'} at 9am. Tap Add in your calendar`);
   }
 
   function water(id){
@@ -657,18 +730,22 @@
     try { pendingPhoto = await resizeImage(f); showPreview(pendingPhoto); } catch { toast('Could not read that photo'); }
   };
   $('pType').innerHTML = Object.keys(TYPES).map(t=>`<option>${t}</option>`).join('');
-  $('pType').addEventListener('change', e => { if(!editing) $('pEvery').value = TYPES[e.target.value].d; });
+  function showPet(){
+    const ty = TYPES[$('pType').value] || {};
+    $('pPet').innerHTML = ty.pet === true ? '🐾 Non-toxic to cats and dogs.' : ty.pet === false ? '🐾 Toxic to cats and dogs if eaten. Keep it out of reach.' : '';
+  }
+  $('pType').addEventListener('change', e => { if(!editing) $('pEvery').value = TYPES[e.target.value].d; showPet(); });
   function openDlg(p){
     editing = p || null;
     $('dlgTitle').textContent = p ? 'Edit plant' : 'Add a plant';
     $('pName').value = p?.name || '';
-    $('pType').value = p?.type || 'Monstera';
+    $('pType').value = TYPES[p?.type] ? p.type : (p ? 'Other' : 'Monstera');
     $('pEvery').value = p?.every || TYPES['Monstera'].d;
     $('pLast').value = p?.last || todayStr();
     $('pLight').value = p?.light || 'Bright indirect';
     $('pNotes').value = p?.notes || '';
     $('pDelete').hidden = !p;
-    pendingPhoto = undefined; showPreview(p ? photos[p.id] : null);
+    pendingPhoto = undefined; showPreview(p ? photos[p.id] : null); showPet();
     dlg.showModal();
   }
   $('plantForm').addEventListener('submit', e => {
@@ -690,6 +767,8 @@
 
   document.addEventListener('click', e => {
     const w = e.target.closest('[data-water]'); if(w){ water(w.dataset.water); return; }
+    const r = e.target.closest('[data-remind]'); if(r){ remind(r.dataset.remind); return; }
+    if(e.target.closest('[data-add]')){ openDlg(); return; }
     const ed = e.target.closest('[data-edit]'); if(ed){ openDlg(state.plants.find(p=>p.id===ed.dataset.edit)); }
   });
 
@@ -767,7 +846,7 @@
   document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
     document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active', x===b));
     document.querySelectorAll('section').forEach(s=>s.classList.toggle('active', s.id===b.dataset.tab));
-    $('addBtn').style.display = ['today','plants'].includes(b.dataset.tab) ? '' : 'none';
+    $('addBtn').style.display = b.dataset.tab === 'plants' ? '' : 'none';
     window.scrollTo(0,0);
   });
 
